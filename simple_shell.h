@@ -5,6 +5,7 @@
 
 extern char **environ;
 
+char *trim(char *str);
 void afficher_invite(void);
 char *lire_commande(void);
 void executer_commande(char *commande);
