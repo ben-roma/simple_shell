@@ -1,6 +1,7 @@
 #include "simple_shell.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /**
  * main - maid void
@@ -13,16 +14,25 @@ int main(void)
 
 	while (1)
 	{
-		afficher_invite();
+		if (isatty(STDIN_FILENO))
+		{
+			afficher_invite();
+		}
 		commande = lire_commande();
 
 		if (commande == NULL)
 		{
-			printf("\n");
+			if (isatty(STDIN_FILENO))
+			{
+				printf("\n");
+			}
 			exit(0);
 		}
 
-		executer_commande(commande);
+		if (*commande != '\0')
+		{
+			executer_commande(commande);
+		}
 		free(commande);
 	}
 	return (0);
