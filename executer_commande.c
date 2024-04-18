@@ -1,10 +1,11 @@
 #include "simple_shell.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
+#include <errno.h>
 
 /**
 * executer_commande - to execute a command
@@ -17,14 +18,6 @@ void executer_commande(char *commande)
 	int status;
 	char *argv[2];
 
-	if (strcmp(commande, "exit") == 0)
-	{
-		free(commande);
-		exit(0);
-	}
-
-	argv[0] = commande;
-	argv[1] = NULL;
 	pid = fork();
 	if (pid == -1)
 	{
@@ -32,14 +25,13 @@ void executer_commande(char *commande)
 		free(commande);
 		exit(EXIT_FAILURE);
 	}
-
-	if (pid == 0)
+	else if (pid == 0)
 	{
 		if (execve(commande, argv, environ) == -1)
 		{
-			perror(commande);
+			fprintf(stderr, "%s: %s\n", commande, strerror(errno));
 			free(commande);
-			exit(EXIT_FAILURE);
+			exit(127);
 		}
 	}
 	else
@@ -48,6 +40,16 @@ void executer_commande(char *commande)
 			waitpid(pid, &status, WUNTRACED);
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
-		free(commande);
+		if (WIFEXITED(status))
+		{
+			int exit_status = WEXITSTATUS(status);
+
+			if (exit_status != 0)
+			{
+				free(commande);
+				exit(exit_status);
+			}
+		}
 	}
+	free(commande);
 }
